@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NoteX — Satış Asistanı</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --murekkep:#151B26; --turkuaz:#1FB6A0; --kirik-beyaz:#F4F6F5;
+    --gri:#6B7280; --cizgi:#E2E4E3;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:var(--murekkep); color:var(--kirik-beyaz);
+    font-family:'IBM Plex Sans',-apple-system,Segoe UI,Roboto,sans-serif;
+    line-height:1.55;
+  }
+  .sarmal{max-width:900px; margin:0 auto; padding:48px 24px 72px}
+  header{display:flex; align-items:center; gap:12px; margin-bottom:8px}
+  .isaret{
+    width:36px; height:36px; border-radius:12px 0 0 0; background:#0F1319;
+    display:grid; place-items:center; font-weight:600; font-size:17px;
+  }
+  .isaret i{font-style:normal}
+  .isaret .x{color:var(--turkuaz); font-size:12px; margin-left:1px}
+  h1{font-size:30px; font-weight:600; margin:18px 0 6px; letter-spacing:-.4px}
+  .alt{color:var(--gri); margin:0 0 28px; max-width:620px}
+
+  /* Cam efekti (glassmorphism) — Wix tarafindaki karta karsilik gelir */
+  .kart{
+    background:rgba(244,246,245,.06);
+    border:1px solid rgba(244,246,245,.12);
+    backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px);
+    border-radius:20px 4px 4px 4px; padding:22px;
+  }
+  #sohbet{min-height:240px; max-height:420px; overflow-y:auto; margin-bottom:16px}
+  .balon{max-width:78%; padding:11px 14px; border-radius:14px; margin-bottom:10px; font-size:15px}
+  .ben{margin-left:auto; background:var(--turkuaz); color:#08201C}
+  .asistan{background:rgba(244,246,245,.10); border:1px solid rgba(244,246,245,.10)}
+  .bos{color:var(--gri); font-size:14px}
+
+  .satir{display:flex; gap:10px}
+  input{
+    flex:1; padding:12px 14px; border-radius:10px; font:inherit; font-size:15px;
+    background:rgba(244,246,245,.07); color:var(--kirik-beyaz);
+    border:1px solid rgba(244,246,245,.16);
+  }
+  input::placeholder{color:#8A9099}
+  input:focus{outline:none; border-color:var(--turkuaz)}
+  button{
+    padding:12px 22px; border:0; border-radius:10px; font:inherit; font-weight:500;
+    background:var(--turkuaz); color:#08201C; cursor:pointer;
+  }
+  button:disabled{opacity:.5; cursor:not-allowed}
+
+  h2{font-size:19px; font-weight:600; margin:40px 0 4px}
+  .form{display:grid; grid-template-columns:1fr 1fr auto; gap:10px; margin-top:14px}
+  .durum{margin-top:12px; font-size:14px; min-height:20px}
+  .hata{color:#FF9C8A}
+  .tamam{color:var(--turkuaz)}
+  footer{margin-top:44px; color:var(--gri); font-size:13px; border-top:1px solid rgba(244,246,245,.10); padding-top:16px}
+  a{color:var(--turkuaz)}
+  @media(max-width:620px){ .form{grid-template-columns:1fr} }
+</style>
+</head>
+<body>
+<div class="sarmal">
+
+  <header>
+    <div class="isaret"><i>N</i><span class="x">x</span></div>
+    <strong>NoteX</strong>
+  </header>
+
+  <h1>Söz uçmaz.</h1>
+  <p class="alt">
+    Toplantıyı tutanağa çevirir. Fiyatlandırma, desteklenen toplantı türleri ve
+    KVKK uyumu hakkında sorun; asistan yanıtlasın.
+  </p>
+
+  <div class="kart">
+    <div id="sohbet"><p class="bos">Sorunuzu yazın, asistan yanıtlasın.</p></div>
+    <div class="satir">
+      <input id="girisMesaj" placeholder="Örn: Apartman genel kurulu tutanağı hazırlıyorum" autocomplete="off">
+      <button id="dugmeGonder">Sor</button>
+    </div>
+    <div class="durum" id="sohbetDurum"></div>
+  </div>
+
+  <h2>Erken erişim listesi</h2>
+  <p class="alt">Uygulama yayına çıktığında ilk siz haberdar olun.</p>
+  <div class="form">
+    <input id="girisIsim" placeholder="Adınız" autocomplete="name">
+    <input id="girisTelefon" placeholder="Telefon" autocomplete="tel">
+    <button id="dugmeKayit">Kaydol</button>
+  </div>
+  <div class="durum" id="formDurum"></div>
+
+  <footer>
+    Yerel test arayüzü · Yönetim paneli: <a href="/dashboard">/dashboard</a>
+  </footer>
+</div>
+
+<script>
+// Sohbet gecmisi sayfa bellegqinde tutulur ve her istekte backend'e gonderilir.
+// Backend durum tutmaz (stateless); cok turlu sohbetin calismasi buna bagli.
+let gecmis = [];
+
+const $ = (id) => document.getElementById(id);
+const sohbet = $('sohbet');
+
+function balonEkle(rol, metin){
+  const ilk = sohbet.querySelector('.bos');
+  if (ilk) ilk.remove();
+  const d = document.createElement('div');
+  d.className = 'balon ' + (rol === 'user' ? 'ben' : 'asistan');
+  d.textContent = metin;
+  sohbet.appendChild(d);
+  sohbet.scrollTop = sohbet.scrollHeight;
+  return d;
+}
+
+async function mesajGonder(){
+  const kutu = $('girisMesaj');
+  const mesaj = kutu.value.trim();
+  if (!mesaj) return;
+
+  const dugme = $('dugmeGonder');
+  const durum = $('sohbetDurum');
+  durum.textContent = ''; durum.className = 'durum';
+
+  balonEkle('user', mesaj);
+  kutu.value = '';
+  dugme.disabled = true;                       // cift tiklamayi engelle
+  const bekleyen = balonEkle('assistant', 'Yanıt hazırlanıyor…');
+
+  try{
+    // Goreli yol kullaniliyor (mutlak adres degil): boylece hem yerelde
+    // hem Render'da ayni kod calisir.
+    const y = await fetch('/api/sohbet', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ mesaj, gecmis })
+    });
+    const veri = await y.json();
+
+    if (!veri.basari) throw new Error(veri.hata || 'Bilinmeyen hata');
+
+    bekleyen.textContent = veri.cevap;
+    // Gecmis, backend'in bekledigi bicimde tutulur: {role, content}
+    gecmis.push({role:'user', content:mesaj});
+    gecmis.push({role:'assistant', content:veri.cevap});
+  }catch(e){
+    bekleyen.remove();
+    durum.textContent = e.message;
+    durum.className = 'durum hata';
+  }finally{
+    dugme.disabled = false;
+    kutu.focus();
+  }
+}
+
+async function leadKaydet(){
+  const isim = $('girisIsim').value.trim();
+  const telefon = $('girisTelefon').value.trim();
+  const durum = $('formDurum');
+  const dugme = $('dugmeKayit');
+
+  durum.textContent = ''; durum.className = 'durum';
+  if (!isim || !telefon){
+    durum.textContent = 'Ad ve telefon zorunludur.';
+    durum.className = 'durum hata';
+    return;
+  }
+
+  dugme.disabled = true;
+  try{
+    // Son kullanici mesaji da kaydedilir: hangi ihtiyacla geldigi bilgisi.
+    const sonMesaj = [...gecmis].reverse().find(m => m.role === 'user');
+    const y = await fetch('/api/leads', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ isim, telefon, mesaj: sonMesaj ? sonMesaj.content : '' })
+    });
+    const veri = await y.json();
+    if (!veri.basari) throw new Error(veri.hata || 'Kayıt yapılamadı');
+
+    durum.textContent = veri.mesaj;
+    durum.className = 'durum tamam';
+    $('girisIsim').value = ''; $('girisTelefon').value = '';
+  }catch(e){
+    durum.textContent = e.message;
+    durum.className = 'durum hata';
+  }finally{
+    dugme.disabled = false;
+  }
+}
+
+$('dugmeGonder').addEventListener('click', mesajGonder);
+$('girisMesaj').addEventListener('keydown', e => { if (e.key === 'Enter') mesajGonder(); });
+$('dugmeKayit').addEventListener('click', leadKaydet);
+</script>
+</body>
+</html>

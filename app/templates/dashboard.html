@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NoteX — Yönetim Paneli</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --murekkep:#151B26; --turkuaz:#1FB6A0; --kirik-beyaz:#F4F6F5;
+    --gri:#6B7280; --cizgi:#E2E4E3;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:var(--kirik-beyaz); color:var(--murekkep);
+    font-family:'IBM Plex Sans',-apple-system,Segoe UI,Roboto,sans-serif;
+    line-height:1.5;
+  }
+  .sarmal{max-width:1080px; margin:0 auto; padding:40px 24px 72px}
+  header{display:flex; align-items:center; gap:12px}
+  .isaret{
+    width:34px; height:34px; border-radius:11px 0 0 0; background:var(--murekkep);
+    display:grid; place-items:center; font-weight:600; font-size:16px; color:var(--kirik-beyaz);
+  }
+  .isaret i{font-style:normal}
+  .isaret .x{color:var(--turkuaz); font-size:11px; margin-left:1px}
+
+  /* F-Pattern: baslik ve ozet solda, eylem sagda */
+  .ust{display:flex; align-items:flex-end; justify-content:space-between; gap:16px; margin:24px 0 20px}
+  h1{font-size:26px; font-weight:600; margin:0 0 4px; letter-spacing:-.3px}
+  .ozet{color:var(--gri); font-size:14px; margin:0}
+  button{
+    padding:10px 18px; border:0; border-radius:10px; font:inherit; font-weight:500;
+    background:var(--murekkep); color:var(--kirik-beyaz); cursor:pointer;
+  }
+  button:disabled{opacity:.5; cursor:not-allowed}
+
+  table{width:100%; border-collapse:collapse; background:#fff; border-radius:12px; overflow:hidden}
+  th,td{padding:13px 16px; text-align:left; border-bottom:1px solid var(--cizgi); font-size:14px; vertical-align:top}
+  /* En onemli kolon (isim) en solda — F-Pattern gerektirdigi icin */
+  th{background:#EDEFEE; font-weight:600; font-size:13px; color:#41464F; letter-spacing:.2px}
+  tr:last-child td{border-bottom:0}
+  td.isim{font-weight:500}
+  td.tel{font-variant-numeric:tabular-nums; white-space:nowrap}
+  td.tarih{color:var(--gri); white-space:nowrap}
+  .durum{margin-top:18px; font-size:14px; color:var(--gri)}
+  .hata{color:#B42318}
+  a{color:var(--murekkep)}
+</style>
+</head>
+<body>
+<div class="sarmal">
+
+  <header>
+    <div class="isaret"><i>N</i><span class="x">x</span></div>
+    <strong>NoteX</strong>
+  </header>
+
+  <div class="ust">
+    <div>
+      <h1>Yönetim Paneli</h1>
+      <p class="ozet" id="ozet">Yükleniyor…</p>
+    </div>
+    <button id="dugmeYenile">Yenile</button>
+  </div>
+
+  <table>
+    <thead>
+      <tr><th>Ad Soyad</th><th>Telefon</th><th>Mesaj</th><th>Tarih</th></tr>
+    </thead>
+    <tbody id="govde"></tbody>
+  </table>
+
+  <div class="durum" id="durum"></div>
+  <p class="durum">Karşılama sayfası: <a href="/">/</a></p>
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+
+async function leadleriYukle(){
+  const dugme = $('dugmeYenile');
+  const durum = $('durum');
+  const govde = $('govde');
+
+  dugme.disabled = true;
+  durum.textContent = ''; durum.className = 'durum';
+
+  try{
+    const y = await fetch('/api/leads');
+    const veri = await y.json();
+    if (!veri.basari) throw new Error(veri.hata || 'Liste alınamadı');
+
+    govde.innerHTML = '';
+    if (veri.adet === 0){
+      $('ozet').textContent = 'Henüz kayıt yok.';
+      govde.innerHTML = '<tr><td colspan="4" style="color:#6B7280">'
+                      + 'Karşılama sayfasından ilk kaydı oluşturun.</td></tr>';
+      return;
+    }
+
+    $('ozet').textContent = 'Toplam ' + veri.adet + ' kayıt · en yeniden eskiye';
+
+    for (const l of veri.leads){
+      const tr = document.createElement('tr');
+      // mesaj alani null gelebilir (opsiyonel sutun) — bos hucre yerine tire
+      tr.innerHTML =
+        '<td class="isim"></td><td class="tel"></td><td></td><td class="tarih"></td>';
+      const h = tr.children;
+      h[0].textContent = l.isim;
+      h[1].textContent = l.telefon;
+      h[2].textContent = l.mesaj || '—';
+      h[3].textContent = l.tarih;
+      govde.appendChild(tr);
+    }
+  }catch(e){
+    durum.textContent = 'Bağlantı kurulamadı: ' + e.message;
+    durum.className = 'durum hata';
+    $('ozet').textContent = '';
+  }finally{
+    dugme.disabled = false;
+  }
+}
+
+$('dugmeYenile').addEventListener('click', leadleriYukle);
+leadleriYukle();
+</script>
+</body>
+</html>
