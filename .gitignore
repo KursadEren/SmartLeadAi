@@ -1,0 +1,21 @@
+# Gizli anahtarlar — ASLA GitHub'a gitmez
+.env
+
+# Sanal ortam
+venv/
+.venv/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# Veritabanı
+*.db
+*.sqlite
+*.sqlite3
+
+# Editör / işletim sistemi
+.vscode/
+.idea/
+.DS_Store
