@@ -5,6 +5,7 @@
 from flask import Blueprint, jsonify, render_template, request
 
 from app import database
+from app.database import VeritabaniError
 from app.services.ai_service import AIServiceError, ai_service
 
 sayfa_bp = Blueprint('sayfa', __name__)
@@ -70,7 +71,11 @@ def lead_kaydet():
         return jsonify({'basari': False, 'hata': 'Isim veya telefon cok uzun.'}), 400
 
     # Bos string yerine None kaydediyoruz
-    lead_id = database.lead_ekle(isim, telefon, mesaj or None)
+    try:
+        lead_id = database.lead_ekle(isim, telefon, mesaj or None)
+    except VeritabaniError as hata:
+        # 500 = sunucu tarafinda bir sorun var
+        return jsonify({'basari': False, 'hata': str(hata)}), 500
 
     # 201 = yeni kayit olusturuldu
     return jsonify({
@@ -82,7 +87,10 @@ def lead_kaydet():
 
 @api_bp.route('/leads', methods=['GET'])
 def leadleri_getir():
-    kayitlar = database.tum_leadler()
+    try:
+        kayitlar = database.tum_leadler()
+    except VeritabaniError as hata:
+        return jsonify({'basari': False, 'hata': str(hata)}), 500
 
     leads = []
     for kayit in kayitlar:
