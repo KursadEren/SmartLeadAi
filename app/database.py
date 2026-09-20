@@ -24,7 +24,7 @@ def get_db():
 
 
 def init_db(app):
-    # Tablo yoksa olusturur. IF NOT EXISTS oldugu icin
+    # Tablolar yoksa olusturur. IF NOT EXISTS oldugu icin
     # her acilista calismasi sorun degil, veriyi silmez.
     global veritabani_yolu
     veritabani_yolu = app.config['DATABASE_URL']
@@ -38,6 +38,16 @@ def init_db(app):
                 telefon TEXT NOT NULL,
                 mesaj   TEXT,
                 tarih   TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+        # Ziyaretcinin asistana sordugu her soru ve alinan cevap.
+        # Yonetim panelinde gorunuyor; hangi sorular geliyor, gorulsun diye.
+        baglanti.execute("""
+            CREATE TABLE IF NOT EXISTS sohbetler (
+                id     INTEGER PRIMARY KEY AUTOINCREMENT,
+                soru   TEXT NOT NULL,
+                cevap  TEXT NOT NULL,
+                tarih  TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         """)
         baglanti.commit()
@@ -75,5 +85,35 @@ def tum_leadler():
         return imlec.fetchall()
     except sqlite3.Error:
         raise VeritabaniError('Kayitlar okunamadi.')
+    finally:
+        baglanti.close()
+
+
+def sohbet_ekle(soru, cevap):
+    baglanti = get_db()
+    try:
+        imlec = baglanti.execute(
+            "INSERT INTO sohbetler (soru, cevap) VALUES (?, ?)",
+            (soru, cevap)
+        )
+        baglanti.commit()
+        return imlec.lastrowid
+    except sqlite3.Error:
+        raise VeritabaniError('Sohbet kaydedilemedi.')
+    finally:
+        baglanti.close()
+
+
+def tum_sohbetler(adet=100):
+    # Panelde son konusmalar yeterli; hepsini cekmek gereksiz.
+    baglanti = get_db()
+    try:
+        imlec = baglanti.execute(
+            "SELECT id, soru, cevap, tarih FROM sohbetler ORDER BY id DESC LIMIT ?",
+            (adet,)
+        )
+        return imlec.fetchall()
+    except sqlite3.Error:
+        raise VeritabaniError('Sohbetler okunamadi.')
     finally:
         baglanti.close()
