@@ -43,13 +43,13 @@
   .bos{color:var(--gri); font-size:14px}
 
   .satir{display:flex; gap:10px}
-  input{
+  input, textarea{
     flex:1; padding:12px 14px; border-radius:10px; font:inherit; font-size:15px;
     background:rgba(244,246,245,.07); color:var(--kirik-beyaz);
     border:1px solid rgba(244,246,245,.16);
   }
-  input::placeholder{color:#8A9099}
-  input:focus{outline:none; border-color:var(--turkuaz)}
+  input::placeholder, textarea::placeholder{color:#8A9099}
+  input:focus, textarea:focus{outline:none; border-color:var(--turkuaz)}
   button{
     padding:12px 22px; border:0; border-radius:10px; font:inherit; font-weight:500;
     background:var(--turkuaz); color:#08201C; cursor:pointer;
@@ -57,13 +57,16 @@
   button:disabled{opacity:.5; cursor:not-allowed}
 
   h2{font-size:19px; font-weight:600; margin:40px 0 4px}
-  .form{display:grid; grid-template-columns:1fr 1fr auto; gap:10px; margin-top:14px}
+  .form{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:14px}
   .durum{margin-top:12px; font-size:14px; min-height:20px}
   .hata{color:#FF9C8A}
   .tamam{color:var(--turkuaz)}
   footer{margin-top:44px; color:var(--gri); font-size:13px; border-top:1px solid rgba(244,246,245,.10); padding-top:16px}
   a{color:var(--turkuaz)}
-  .not-alani{width:100%; margin-top:10px}
+  .not-alani{grid-column:1/-1; width:100%; min-height:88px; resize:vertical;
+             font-family:inherit; line-height:1.5}
+  .form button{grid-column:1/-1; justify-self:start}
+  .alan-basligi{grid-column:1/-1; margin:6px 0 -4px; font-size:13px; color:var(--gri)}
   @media(max-width:620px){ .form{grid-template-columns:1fr} }
 </style>
 </head>
@@ -95,11 +98,12 @@
   <div class="form">
     <input id="girisIsim" placeholder="Adınız" autocomplete="name">
     <input id="girisTelefon" placeholder="Telefon" autocomplete="tel">
+    <label class="alan-basligi" for="girisNot">Mesajınız (isteğe bağlı)</label>
+    <textarea id="girisNot" class="not-alani" rows="3"
+              placeholder="Örn. apartman genel kurulu tutanağı tutmam gerekiyor"
+              autocomplete="off"></textarea>
     <button id="dugmeKayit">Kaydol</button>
   </div>
-  <input id="girisNot" class="not-alani"
-         placeholder="Mesajınız — örn. apartman genel kurulu tutanağı (isteğe bağlı)"
-         autocomplete="off">
   <div class="durum" id="formDurum"></div>
 
   <footer>
