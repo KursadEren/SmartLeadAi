@@ -63,6 +63,7 @@
   .tamam{color:var(--turkuaz)}
   footer{margin-top:44px; color:var(--gri); font-size:13px; border-top:1px solid rgba(244,246,245,.10); padding-top:16px}
   a{color:var(--turkuaz)}
+  .not-alani{width:100%; margin-top:10px}
   @media(max-width:620px){ .form{grid-template-columns:1fr} }
 </style>
 </head>
@@ -96,6 +97,9 @@
     <input id="girisTelefon" placeholder="Telefon" autocomplete="tel">
     <button id="dugmeKayit">Kaydol</button>
   </div>
+  <input id="girisNot" class="not-alani"
+         placeholder="Mesajınız — örn. apartman genel kurulu tutanağı (isteğe bağlı)"
+         autocomplete="off">
   <div class="durum" id="formDurum"></div>
 
   <footer>
@@ -165,6 +169,7 @@ async function mesajGonder(){
 async function leadKaydet(){
   const isim = $('girisIsim').value.trim();
   const telefon = $('girisTelefon').value.trim();
+  const not_ = $('girisNot').value.trim();
   const durum = $('formDurum');
   const dugme = $('dugmeKayit');
 
@@ -182,12 +187,14 @@ async function leadKaydet(){
     const y = await fetch('/api/leads', {
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ isim, telefon, mesaj: sonMesaj ? sonMesaj.content : '' })
+      // Once formdaki mesaj alani; bos birakilmissa sohbetteki son soru.
+      body: JSON.stringify({ isim, telefon, mesaj: not_ || (sonMesaj ? sonMesaj.content : '') })
     });
     const veri = await y.json();
     if (!veri.basari) throw new Error(veri.hata || 'Kayıt yapılamadı');
 
     durum.textContent = veri.mesaj;
+    $('girisNot').value = '';
     durum.className = 'durum tamam';
     $('girisIsim').value = ''; $('girisTelefon').value = '';
   }catch(e){
