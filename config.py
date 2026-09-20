@@ -32,9 +32,6 @@ class Config:
     AI_PROVIDER = os.environ.get('AI_PROVIDER', 'groq')
     AI_MODEL = os.environ.get('AI_MODEL', '')
     CORS_ORIGINS = os.environ.get('CORS_ORIGINS', '*')
-    # Yonetim panelinin ve gizli uclarin parolasi. Bos birakilirsa
-    # o uclar hic calismaz; yanlislikla herkese acik kalmasin diye boyle.
-    ADMIN_TOKEN = os.environ.get('ADMIN_TOKEN', '')
     BUSINESS_CONTEXT = os.environ.get('BUSINESS_CONTEXT', ISLETME_BAGLAMI)
 
 

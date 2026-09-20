@@ -47,21 +47,8 @@ smartlead_ai/
 | GET | `/health` | Sunucu ayakta mı |
 | POST | `/api/sohbet` | `{mesaj, gecmis}` → `{basari, cevap}`; soru-cevap kaydedilir |
 | POST | `/api/leads` | `{isim, telefon, mesaj}` → 201 |
-| GET | `/api/leads` | **Anahtar ister** → `{basari, adet, leads}` |
-| GET | `/api/sohbetler` | **Anahtar ister** → `{basari, adet, sohbetler}` |
-
-### Korumali uclar
-
-Kayit donen iki uc `X-Admin-Token` basligi ister; yoksa **401** doner:
-
-```bash
-curl -H "X-Admin-Token: $ADMIN_TOKEN" https://.../api/leads
-```
-
-Anahtari Wix'in arka uc modulu gonderiyor, tarayici degil — bu yuzden anahtar
-ziyaretcinin bilgisayarina hic inmiyor. `/dashboard` sayfasi ise tarayicinin
-kendi parola kutusunu kullanir (kullanici adi serbest, parola `ADMIN_TOKEN`)
-ve tabloyu sunucuda doldurur; boylece anahtar sayfaya da gomulmez.
+| GET | `/api/leads` | `{basari, adet, leads}` |
+| GET | `/api/sohbetler` | `{basari, adet, sohbetler}` |
 
 Her yanıt `basari` alanı içerir. Eksik veri **400**, yapay zekâ hatası **503**,
 veritabanı hatası **500**, yeni kayıt **201**.
@@ -83,7 +70,6 @@ GROQ_API_KEY=gsk_...
 SECRET_KEY=rastgele-uzun-bir-metin
 AI_PROVIDER=groq
 AI_MODEL=openai/gpt-oss-20b
-ADMIN_TOKEN=uzun-rastgele-bir-metin
 DATABASE_URL=smartlead.db
 CORS_ORIGINS=*
 FLASK_ENV=development
@@ -111,7 +97,6 @@ python run.py
 | `DATABASE_URL` | SQLite dosyasının yolu |
 | `CORS_ORIGINS` | İzin verilen kaynaklar. Üretimde `*` yerine site adresi |
 | `FLASK_ENV` | `development` veya `production` |
-| `ADMIN_TOKEN` | Yonetim paneli ve kayit uclari icin parola. Bos ise o uclar kapali kalir |
 
 ## Test
 
